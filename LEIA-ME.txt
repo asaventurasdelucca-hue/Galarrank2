@@ -1,0 +1,46 @@
+GALAR RANK (mod) v0.1.1 - projeto para compilar no GitHub
+
+O QUE ESTA PRONTO (versao 0.1.0 - so o essencial, para validar o caminho)
+  /galar rank                       mostra seu rank, classe e insignias
+  /galar trainers                   lista treinadores (e a classe exigida)
+  /galar battle <treinador>         inicia uma batalha de verdade (batalha por turnos do Cobblemon) contra o treinador
+  /galar admin setrank <jogador> <rank>
+  /galar admin reset <jogador>
+  /galar admin win <jogador> <treinador>   simula uma vitoria (testa o rank sem lutar)
+Regras: rank comeca em 10000 (menor = melhor). Top 100 = classe Ultra (libera lideres). Top 8 = Master (libera Leon).
+Cada treinador pontua UMA vez por jogador. O ranking e salvo por jogador em <mundo>/galarrank.json.
+Nao precisa de NPC para batalhar: o time do treinador e criado pelo mod (nao usa o NPC do Cobblemon).
+
+COMO COMPILAR (sem instalar nada)
+ 1. No GitHub: botao "+" > New repository > nome: galarrank > Create repository.
+ 2. Na pagina do repositorio: "uploading an existing file". Arraste TODO o conteudo desta pasta
+    (inclusive a pasta .github e a pasta src). Depois "Commit changes".
+    Se a pasta .github nao subir, crie o arquivo: Add file > Create new file, nome  .github/workflows/build.yml
+    e cole o conteudo do build.yml.
+ 3. Aba "Actions": o job "build" roda sozinho (1 a 3 minutos). Se ficar verde, abra a execucao e baixe
+    o artefato "galarrank-jar" (la dentro esta o galarrank-0.1.0.jar). Se ficar vermelho, abra o job,
+    copie o log (as linhas em vermelho) e mande para o Claude.
+ 4. Coloque o jar na pasta mods (servidor e clientes) e abra o mundo.
+
+TESTE (5 minutos)
+  /galar battle teste        deve abrir uma batalha contra "Treinador Teste" (1 Wooloo)
+  Vencer -> aparece "[Rotom Phone] Vitoria contra Treinador Teste! ..." e /galar rank muda.
+  Se /galar nao existir, o mod nao carregou: mande o logs/latest.log.
+
+USO COM EASY NPC (botao que luta)
+  No Easy NPC, crie um dialogo com um botao cuja acao e executar o comando:  /galar battle milo
+  (veja o nome do treinador com /galar trainers)
+
+PROXIMOS PASSOS (depois que o 0.1.0 compilar e a batalha funcionar)
+  - Limite de nivel por classe (integrar com o seu mod de level cap)
+  - Drone do Rotom como entidade propria (sem poder ser batalhado)
+  - Treinadores em arquivo de configuracao (sem recompilar)
+
+
+IMPORTANTE (v0.1.1)
+ - O jar que saiu antes tinha SO um arquivo de metadados chamado "neoforged.mods.toml" (nome errado) e nenhuma classe:
+   por isso o Minecraft recusava. O nome certo e neoforge.mods.toml e o jar precisa conter as classes (dev/galar/rank/*.class).
+ - Agora o build FALHA de proposito se o jar sair sem o toml ou sem a classe GalarRank.class (passo "Conferir que o jar tem o mod de verdade").
+ - No repositorio: APAGUE tudo que o Gemini mexeu (principalmente .github/workflows/build.yml e qualquer arquivo que gere o jar na mao)
+   e suba estes arquivos no lugar. Nao crie o jar manualmente: ele tem que sair do "gradle build".
+ - Se o build ficar vermelho, baixe o artefato "build-log" (aba Actions > a execucao > Artifacts) e mande o build.log.

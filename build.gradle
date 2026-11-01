@@ -1,0 +1,32 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.148'
+}
+
+group = 'dev.galar'
+version = '0.1.1'
+base { archivesName = 'galarrank' }
+
+java { toolchain.languageVersion = JavaLanguageVersion.of(21) }
+
+repositories {
+    mavenCentral()
+}
+
+neoForge {
+    version = '21.1.259'
+    mods {
+        galarrank { sourceSet(sourceSets.main) }
+    }
+}
+
+dependencies {
+    // O jar do Cobblemon e baixado pelo GitHub Actions (veja .github/workflows/build.yml) e so e usado para compilar.
+    compileOnly files('libs/cobblemon.jar')
+    compileOnly 'org.jetbrains.kotlin:kotlin-stdlib:2.0.21'
+    compileOnly 'org.jetbrains:annotations:24.1.0'
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}

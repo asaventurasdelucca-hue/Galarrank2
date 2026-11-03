@@ -1,0 +1,115 @@
+name: Build GalarRank
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: galarrank-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Compile mod
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Prepare Gradle source folders
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p src/main/java/dev/galar/rank src/main/resources/META-INF libs
+
+          # Neste repositório, os .java estão na raiz. Copiamos sem apagar os originais.
+          shopt -s nullglob
+          JAVA_FILES=(./*.java)
+          if ((${#JAVA_FILES[@]} == 0)); then
+            echo "Nenhum arquivo .java foi encontrado na raiz do repositório."
+            exit 1
+          fi
+          cp "${JAVA_FILES[@]}" src/main/java/dev/galar/rank/
+
+          # O NeoForge espera o metadata dentro de META-INF no resources.
+          if [[ -f neoforge.mods.toml ]]; then
+            cp neoforge.mods.toml src/main/resources/META-INF/neoforge.mods.toml
+          elif [[ ! -f src/main/resources/META-INF/neoforge.mods.toml ]]; then
+            echo "neoforge.mods.toml não foi encontrado."
+            exit 1
+          fi
+
+          echo "Fontes preparadas:"
+          find src/main/java -type f -name '*.java' -print
+
+      - name: Download Cobblemon 1.8.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="$(curl --fail --silent --show-error --location --retry 3 \
+            -A 'galarrank-build' \
+            'https://api.modrinth.com/v2/project/cobblemon/version' \
+            | jq -er '[.[] | .files[] | select(.filename == "Cobblemon-neoforge-1.8.2+1.21.1.jar")][0].url')"
+
+          curl --fail --show-error --location --retry 3 \
+            -A 'galarrank-build' \
+            "$URL" -o libs/cobblemon.jar
+
+          test -s libs/cobblemon.jar
+          echo "Cobblemon baixado com sucesso."
+
+      - name: Build mod
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle build --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Verify generated mod JAR
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR="$(find build/libs -maxdepth 1 -type f -name '*.jar' \
+            ! -name '*sources*' ! -name '*javadoc*' -print -quit)"
+
+          test -n "$JAR"
+          test -s "$JAR"
+          echo "Verificando: $JAR"
+          jar tf "$JAR" > jar-contents.txt
+
+          grep -qx 'META-INF/neoforge.mods.toml' jar-contents.txt
+          grep -qx 'dev/galar/rank/GalarRank.class' jar-contents.txt
+          echo "JAR verificado: metadata e classe principal encontrados."
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galarrank-build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload compiled mod
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galarrank-jar
+          path: build/libs/*.jar
+          if-no-files-found: error
+          retention-days: 14

@@ -1,4 +1,4 @@
-GALAR RANK (mod) v0.1.1 - projeto para compilar no GitHub
+GALAR RANK (mod) v0.1.2 - projeto para compilar no GitHub
 
 O QUE ESTA PRONTO (versao 0.1.0 - so o essencial, para validar o caminho)
   /galar rank                       mostra seu rank, classe e insignias
@@ -37,10 +37,20 @@ PROXIMOS PASSOS (depois que o 0.1.0 compilar e a batalha funcionar)
   - Treinadores em arquivo de configuracao (sem recompilar)
 
 
-IMPORTANTE (v0.1.1)
+IMPORTANTE (v0.1.2)
  - O jar que saiu antes tinha SO um arquivo de metadados chamado "neoforged.mods.toml" (nome errado) e nenhuma classe:
    por isso o Minecraft recusava. O nome certo e neoforge.mods.toml e o jar precisa conter as classes (dev/galar/rank/*.class).
  - Agora o build FALHA de proposito se o jar sair sem o toml ou sem a classe GalarRank.class (passo "Conferir que o jar tem o mod de verdade").
  - No repositorio: APAGUE tudo que o Gemini mexeu (principalmente .github/workflows/build.yml e qualquer arquivo que gere o jar na mao)
    e suba estes arquivos no lugar. Nao crie o jar manualmente: ele tem que sair do "gradle build".
  - Se o build ficar vermelho, baixe o artefato "build-log" (aba Actions > a execucao > Artifacts) e mande o build.log.
+
+
+CLIQUE DIREITO (novo na v0.1.2)
+  1. Spawne qualquer NPC (Easy NPC, NPC do Cobblemon, villager...) e fique a ate 5 blocos dele.
+  2. /galar admin bind milo       -> marca o NPC como o lider Milo (use /galar trainers para ver os nomes)
+  3. Clique direito no NPC com a mao principal: a batalha comeca. Sem comando, sem botao.
+  /galar admin unbind             -> remove a marca do NPC mais proximo.
+  Obs: o clique direito do mod toma o lugar do dialogo/GUI do NPC (o clique nao chega nele). Se quiser dialogo
+  antes, use o Easy NPC com um botao que execute  /galar battle milo.
+  A marca e uma tag normal do Minecraft (galar_trainer_milo); tambem funciona com /tag @e[...] add galar_trainer_milo.

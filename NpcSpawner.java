@@ -126,3 +126,7 @@ public final class NpcSpawner {
                             && level.getBlockState(at.above()).isAir()) return at;
                 }
             }
+        }
+        return null;
+    }
+}

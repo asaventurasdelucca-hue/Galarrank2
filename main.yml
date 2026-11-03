@@ -76,7 +76,11 @@ jobs:
             'dev/galar/rank/InteractHooks.class' \
             'dev/galar/rank/BattleHooks.class' \
             'dev/galar/rank/TrainerBattles.class' \
-            'dev/galar/rank/RankLogic.class'; do
+            'dev/galar/rank/RankLogic.class' \
+            'dev/galar/rank/NpcSpawner.class' \
+            'dev/galar/rank/RotomDrone.class' \
+            'dev/galar/rank/RotomCompanion.class' \
+            'dev/galar/rank/RotomClient.class'; do
             grep -Fxq "$name" jar-contents.txt || { echo "Falta no jar: $name"; exit 1; }
           done
           echo "JAR REAL: $JAR"

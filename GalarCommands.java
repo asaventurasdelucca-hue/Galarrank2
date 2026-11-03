@@ -25,6 +25,9 @@ public final class GalarCommands {
         dispatcher.register(Commands.literal("galar")
             .then(Commands.literal("rank").executes(ctx -> showRank(ctx.getSource())))
             .then(Commands.literal("trainers").executes(ctx -> listTrainers(ctx.getSource())))
+            .then(Commands.literal("rotom")
+                .executes(ctx -> toggleRotom(ctx.getSource()))
+                .then(Commands.literal("info").executes(ctx -> showRotom(ctx.getSource()))))
             .then(Commands.literal("battle")
                 .then(Commands.argument("trainer", StringArgumentType.word())
                     .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(Trainers.ALL.keySet(), builder))
@@ -44,6 +47,12 @@ public final class GalarCommands {
                     .then(Commands.argument("trainer", StringArgumentType.word())
                         .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(Trainers.ALL.keySet(), builder))
                         .executes(ctx -> bind(ctx.getSource(), StringArgumentType.getString(ctx, "trainer")))))
+                .then(Commands.literal("spawn")
+                    .then(Commands.argument("trainer", StringArgumentType.word())
+                        .suggests((ctx, builder) -> SharedSuggestionProvider.suggest(Trainers.ALL.keySet(), builder))
+                        .executes(ctx -> spawn(ctx.getSource(), StringArgumentType.getString(ctx, "trainer")))))
+                .then(Commands.literal("setup").executes(ctx -> setup(ctx.getSource())))
+                .then(Commands.literal("clearsetup").executes(ctx -> clearSetup(ctx.getSource())))
                 .then(Commands.literal("unbind").executes(ctx -> unbind(ctx.getSource())))
                 .then(Commands.literal("win")
                     .then(Commands.argument("player", EntityArgument.player())
@@ -54,11 +63,52 @@ public final class GalarCommands {
                                     StringArgumentType.getString(ctx, "trainer"))))))));
     }
 
+
+    private static int toggleRotom(CommandSourceStack src) throws CommandSyntaxException {
+        ServerPlayer player = src.getPlayerOrException();
+        if (RotomCompanion.toggle(player)) RotomDrone.show(player);
+        return 1;
+    }
+
+    private static int showRotom(CommandSourceStack src) throws CommandSyntaxException {
+        RotomDrone.show(src.getPlayerOrException());
+        return 1;
+    }
+
+    private static int spawn(CommandSourceStack src, String id) throws CommandSyntaxException {
+        Trainers.Trainer trainer = Trainers.ALL.get(id);
+        if (trainer == null) {
+            src.sendFailure(Component.literal("Treinador desconhecido: " + id));
+            return 0;
+        }
+        String error = NpcSpawner.spawn(src.getPlayerOrException(), trainer);
+        if (error != null) {
+            src.sendFailure(Component.literal("[GalarRank] " + error));
+            return 0;
+        }
+        src.sendSuccess(() -> Component.literal("[GalarRank] NPC de " + trainer.name()
+                + " criado a partir do preset Easy NPC. Clique direito nele para desafiar."), true);
+        return 1;
+    }
+
+    private static int setup(CommandSourceStack src) throws CommandSyntaxException {
+        int spawned = NpcSpawner.setup(src.getPlayerOrException());
+        src.sendSuccess(() -> Component.literal("[GalarRank] Treinadores criados a partir de presets Easy NPC: "
+                + spawned + ". Use K para localizar os NPCs."), true);
+        return spawned > 0 ? 1 : 0;
+    }
+
+    private static int clearSetup(CommandSourceStack src) throws CommandSyntaxException {
+        int removed = NpcSpawner.clear(src.getPlayerOrException());
+        src.sendSuccess(() -> Component.literal("[GalarRank] NPCs Easy NPC removidos: " + removed), true);
+        return 1;
+    }
+
     private static int showRank(CommandSourceStack src) throws CommandSyntaxException {
         ServerPlayer p = src.getPlayerOrException();
         RankStore.PlayerRank pr = RankStore.get(p.getUUID());
         String msg = "[Rotom Phone] Rank: " + pr.rank + " | Classe: " + RankLogic.className(RankLogic.classOf(pr.rank))
-                + " | Insignias: " + pr.badges + "/8 | Treinadores vencidos: " + pr.defeated.size();
+                + " | Pontos: " + pr.points + " | Insignias: " + pr.badges + "/8 | Treinadores vencidos: " + pr.defeated.size();
         src.sendSuccess(() -> Component.literal(msg), false);
         return 1;
     }

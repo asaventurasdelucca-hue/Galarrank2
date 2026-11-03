@@ -36,9 +36,13 @@ public final class RankLogic {
                 : t.leader() ? LEADER_GAIN
                 : (t.tier() >= 1 && t.tier() <= 5 ? TIER_GAIN[t.tier() - 1] : 0);
         pr.rank = Math.max(1, pr.rank - gain);
+        pr.points += gain;
         pr.defeated.add(t.id());
         if (t.leader()) pr.badges++;
-        if (t.champion()) pr.rank = 1;
+        if (t.champion()) {
+            pr.rank = 1;
+            pr.points += 500;
+        }
         int after = classOf(pr.rank);
         RankStore.save();
 

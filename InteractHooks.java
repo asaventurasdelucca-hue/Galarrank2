@@ -6,35 +6,61 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.Entity;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
-/** Clique direito em entidade marcada com galar_trainer_<id> inicia batalha. */
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+/** Starts a battle from a right-click on a marked trainer NPC. */
 public final class InteractHooks {
     public static final String TAG_PREFIX = "galar_trainer_";
+    private static final Map<UUID, Long> RECENT = new HashMap<>();
+    private static final long CLICK_COOLDOWN_MS = 1400;
 
-    /**
-     * Intercepta antes do Entity#interactAt. O EntityInteract simples pode ser
-     * tarde demais para NPCs que abrem uma interface durante o interactAt.
-     */
-    @SubscribeEvent
-    public void onEntityInteract(PlayerInteractEvent.EntityInteractSpecific event) {
-        if (event.getHand() != InteractionHand.MAIN_HAND) return;
-        Entity target = event.getTarget();
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void specific(PlayerInteractEvent.EntityInteractSpecific event) {
+        handle(event.getEntity(), event.getHand(), event.getTarget(), () -> {
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.SUCCESS);
+        });
+    }
+
+    @SubscribeEvent(priority = EventPriority.HIGHEST)
+    public void normal(PlayerInteractEvent.EntityInteract event) {
+        handle(event.getEntity(), event.getHand(), event.getTarget(), () -> {
+            event.setCanceled(true);
+            event.setCancellationResult(InteractionResult.SUCCESS);
+        });
+    }
+
+    private static void handle(net.minecraft.world.entity.player.Player source,
+                               InteractionHand hand, Entity target, Runnable cancel) {
+        if (hand != InteractionHand.MAIN_HAND) return;
+        // Click on the physical Rotom to refresh the report, not to battle it.
+        if (target.getTags().contains(RotomCompanion.DRONE_TAG)) {
+            cancel.run();
+            if (source instanceof ServerPlayer player && RotomCompanion.isOwner(player, target)) {
+                RotomDrone.show(player);
+            }
+            return;
+        }
         for (String tag : target.getTags()) {
             if (!tag.startsWith(TAG_PREFIX)) continue;
             Trainers.Trainer trainer = Trainers.ALL.get(tag.substring(TAG_PREFIX.length()));
             if (trainer == null) continue;
+            // Also cancel the vanilla villager trading screen.
+            cancel.run();
+            if (!(source instanceof ServerPlayer player)) return;
 
-            // Cancela nos lados onde a tag estiver visivel. No servidor e
-            // obrigatorio; algumas GUIs customizadas exigem integracao extra.
-            event.setCanceled(true);
-            event.setCancellationResult(InteractionResult.SUCCESS);
-            if (!(event.getEntity() instanceof ServerPlayer player)) return;
+            long now = System.currentTimeMillis();
+            Long previous = RECENT.put(player.getUUID(), now);
+            if (previous != null && now - previous < CLICK_COOLDOWN_MS) return;
 
-            String error = TrainerBattles.start(player, trainer);
-            if (error != null) {
-                player.sendSystemMessage(Component.literal("[Rotom Phone] " + error));
-            }
+            String error = TrainerBattles.start(player, trainer, target.getUUID());
+            if (error != null) player.sendSystemMessage(Component.literal("[Rotom Phone] " + error));
+            else player.sendSystemMessage(Component.literal("§6[Rotom Drone] §fDesafiando " + trainer.name() + "!"));
             return;
         }
     }

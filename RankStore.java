@@ -27,6 +27,7 @@ public final class RankStore {
     public static class PlayerRank {
         public int rank = START_RANK;
         public int badges = 0;
+        public int points = 0;
         public Set<String> defeated = new HashSet<>();
     }
 

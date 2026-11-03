@@ -6,7 +6,7 @@ import com.cobblemon.mod.common.battles.BattleFormat;
 import com.cobblemon.mod.common.battles.BattleRegistry;
 import com.cobblemon.mod.common.battles.BattleSide;
 import com.cobblemon.mod.common.battles.BattleStartResult;
-import com.cobblemon.mod.common.battles.ErroredBattleStart;
+import com.cobblemon.mod.common.battles.SuccessfulBattleStart;
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor;
 import com.cobblemon.mod.common.battles.actor.TrainerBattleActor;
 import com.cobblemon.mod.common.battles.ai.StrongBattleAI;
@@ -21,33 +21,75 @@ import java.util.UUID;
 public final class TrainerBattles {
     private TrainerBattles() {}
 
-    /** Retorna null se a batalha comecou, ou a mensagem de erro. */
-    public static String start(ServerPlayer player, Trainers.Trainer t) {
-        RankStore.PlayerRank pr = RankStore.get(player.getUUID());
-        if (RankLogic.classOf(pr.rank) < t.reqClass()) {
-            return "Voce precisa da Classe " + RankLogic.className(t.reqClass()) + " para desafiar " + t.name() + ".";
+    /** Returns null when the battle starts; provides useful diagnostics otherwise. */
+    public static String start(ServerPlayer player, Trainers.Trainer trainer) {
+        return start(player, trainer, UUID.randomUUID());
+    }
+
+    /** Clicking a physical NPC uses its real entity UUID as the trainer actor ID. */
+    public static String start(ServerPlayer player, Trainers.Trainer trainer, UUID npcEntityId) {
+        RankStore.PlayerRank ranking = RankStore.get(player.getUUID());
+        if (RankLogic.classOf(ranking.rank) < trainer.reqClass()) {
+            return "Voce precisa da Classe " + RankLogic.className(trainer.reqClass()) + " para desafiar " + trainer.name() + ".";
+        }
+        if (BattleRegistry.getBattleByParticipatingPlayer(player) != null) {
+            return "Voce ja esta em uma batalha.";
         }
         List<BattlePokemon> playerTeam = Cobblemon.INSTANCE.getStorage().getParty(player).toBattleTeam();
         if (playerTeam == null || playerTeam.isEmpty()) {
-            return "Voce nao tem Pokemon aptos a lutar.";
+            return "Voce nao tem Pokemon aptos a lutar. Cure seu time.";
         }
-        List<BattlePokemon> npcTeam = new ArrayList<>();
-        for (String spec : t.team()) {
-            Pokemon pokemon = PokemonProperties.Companion.parse(spec).create();
-            npcTeam.add(BattlePokemon.Companion.safeCopyOf(pokemon));
+
+        List<BattlePokemon> enemyTeam = new ArrayList<>();
+        StringBuilder names = new StringBuilder();
+        for (String spec : trainer.team()) {
+            try {
+                Pokemon pokemon = PokemonProperties.Companion.parse(spec).create();
+                if (pokemon == null || pokemon.getSpecies() == null) {
+                    return "Time invalido de " + trainer.name() + ": " + spec + " (especie ausente).";
+                }
+                // A new Pokemon's battle copy can otherwise carry zero HP in some versions.
+                pokemon.heal();
+                BattlePokemon battleCopy = BattlePokemon.Companion.safeCopyOf(pokemon);
+                battleCopy.getEffectedPokemon().heal();
+                if (battleCopy.getEffectedPokemon().getCurrentHealth() <= 0) {
+                    return "Pokemon sem HP no time de " + trainer.name() + ": " + spec;
+                }
+                enemyTeam.add(battleCopy);
+                if (!names.isEmpty()) names.append(", ");
+                names.append(spec);
+            } catch (Exception ex) {
+                GalarRank.LOGGER.error("[GalarRank] erro ao criar Pokemon do treinador {}: {}", trainer.id(), spec, ex);
+                return "Erro criando Pokemon " + spec + ". Veja latest.log para detalhes.";
+            }
         }
+        if (enemyTeam.size() != trainer.team().size() || enemyTeam.isEmpty()) {
+            return "Time invalido para " + trainer.name() + " (esperado " + trainer.team().size()
+                    + ", criado " + enemyTeam.size() + ").";
+        }
+
+        GalarRank.LOGGER.info("[GalarRank] Iniciando PvE {}: jogador={} Pokemon, treinador={} Pokemon [{}]",
+                trainer.id(), playerTeam.size(), enemyTeam.size(), names);
         PlayerBattleActor playerActor = new PlayerBattleActor(player.getUUID(), playerTeam);
-        UUID actorId = UUID.randomUUID();
-        TrainerBattleActor trainerActor = new TrainerBattleActor(t.name(), actorId, npcTeam, new StrongBattleAI(t.skill()));
-        BattleStartResult result = BattleRegistry.startBattle(
-                BattleFormat.Companion.getGEN_9_SINGLES(),
-                new BattleSide(playerActor),
-                new BattleSide(trainerActor),
-                false);
-        if (result instanceof ErroredBattleStart) {
-            return "Nao foi possivel iniciar a batalha (voce ja esta em uma?).";
+        UUID actorId = npcEntityId;
+        TrainerBattleActor trainerActor = new TrainerBattleActor(
+                trainer.name(), actorId, enemyTeam, new StrongBattleAI(trainer.skill()));
+        BattleStartResult result;
+        try {
+            result = BattleRegistry.startBattle(
+                    BattleFormat.Companion.getGEN_9_SINGLES(),
+                    new BattleSide(playerActor),
+                    new BattleSide(trainerActor),
+                    false);
+        } catch (Exception ex) {
+            GalarRank.LOGGER.error("[GalarRank] Falha ao iniciar batalha com {}", trainer.id(), ex);
+            return "Erro ao iniciar batalha. Veja latest.log.";
         }
-        BattleHooks.track(actorId, player.getUUID(), t.id());
+        if (!(result instanceof SuccessfulBattleStart)) {
+            GalarRank.LOGGER.warn("[GalarRank] BattleRegistry nao iniciou batalha com {}: {}", trainer.id(), result);
+            return "Batalha rejeitada pelo Cobblemon. Verifique latest.log.";
+        }
+        BattleHooks.track(actorId, player.getUUID(), trainer.id());
         return null;
     }
 }

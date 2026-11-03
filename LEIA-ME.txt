@@ -1,62 +1,45 @@
-GALAR RANK 0.1.3 - FONTES, NAO JAR COMPILADO
+GalarRank v0.1.5 (fonte experimental) - Minecraft 1.21.1 / NeoForge / Cobblemon 1.8.2
 
-Minecraft 1.21.1 / NeoForge 21.1.259 / Cobblemon NeoForge 1.8.2 / Java 21.
-Necessario: Kotlin for Forge, requerido pelo Cobblemon.
+IMPORTANTE: esta versao NAO foi compilada/testada dentro do Minecraft.
+Faca backup do seu mundo antes de usar; compare o build.log se houver erros.
 
-ESTADO REAL
-- O jar 0.1.2 tem classes e metadata, mas ainda precisa ser testado no jogo.
-- Esta 0.1.3 e uma revisao do CODIGO; nao foi compilada nem testada em jogo neste ambiente.
-- O workflow verifica classes reais, compila com Gradle e guarda build.log.
+NOVO ROTOM DRONE FISICO
+- Tecla K: invoca um ROTOM real usando PokemonEntity + modelo 3D do Cobblemon.
+- O Rotom fica flutuando e segue voce. Aperte K novamente para recolher.
+- Clique direito no Rotom: mostra rank, pontos, insignias e treinadores proximos no chat.
+- Comandos: /galar rotom (chamar/recolher), /galar rotom info (consultar)
+- LIMITACAO: ainda e um PokemonEntity do Cobblemon, nao uma entidade 100% blindada contra
+  captura e outras mecanicas de Pokemon. Evite usa-lo em servidores competitivos por enquanto.
+- O modelo de Rotom e o original do Cobblemon; nao copia as texturas para este projeto.
 
-COMO SUBIR NO GITHUB
-- Envie a estrutura COMPLETA do projeto, incluindo src/, build.gradle,
-  settings.gradle, gradle.properties e .github/workflows/main.yml.
-- Remova workflows antigos .github/workflows/build.yml (se houver), para
-  evitar duas builds desnecessarias.
-- Na aba Actions do GitHub, execute Build GalarRank.
-- Se verde: baixe galarrank-jar, EXTRAIA o ZIP e use o .jar dentro de mods/.
-- Se vermelho: baixe build-log, envie o arquivo build.log para diagnostico.
+NOVO SISTEMA DE NPCS COM SKIN
+- Removeu geracao de aldeoes pelo GalarRank.
+- COMPATIVEL COM EASY NPC: crie o NPC pelo Easy NPC, configure a skin e nome.
+- Mire no NPC ate 5 blocos e digite /galar admin bind milo (troque pelo ID desejado).
+- O jogador desafia com clique direito; o time e as regras continuam do GalarRank.
+- Pode criar um botao no dialogo Easy NPC que execute /galar battle milo caso a API
+  de clique de um NPC especifico intercepte a interacao antes do GalarRank.
 
-O QUE MUDOU
-1. Progressao normal agora e possivel com os cinco treinadores de rota:
-   cadete +2800; marcos +2200; heitor +2000; bruna +1700;
-   valentina +1200. Comecando em rank 10000, chega a 100 (Ultra).
-   O treinador 'teste' nao da pontos no ranking.
-2. Oito lideres (+12 cada) elevam rank 100 para 4 (Master).
-3. Clique direito usa EntityInteractSpecific (mais cedo que EntityInteract).
-4. /galar admin bind olha para o NPC (cone de mira e alcance 5 blocos)
-   em vez de selecionar automaticamente o ser vivo mais proximo.
-5. So pontua vitorias de batalhas iniciadas pelo GalarRank, rastreando
-   UUID unico do treinador. Batalha contra outro treinador com mesmo nome
-   nao deve conceder rank.
-6. Salvamento de galarrank.json por arquivo temporario, seguido de rename.
-7. Workflow com verificacao do JAR e log.
+IMPORTACAO AUTOMATICA COM PRESETS EASY NPC (OPCIONAL)
+- Instale a versao NeoForge 1.21.1 do Easy NPC com seus modulos necessarios.
+- Monte um NPC da maneira desejada, usando sua skin personalizada.
+- Exporte no Easy NPC como PRESET DO MUNDO com nome exato galar_milo,
+  galar_nessa, etc., conforme /galar trainers (galar_teste para testes).
+- /galar admin spawn milo: importa preset galar_milo e o vincula.
+- /galar admin setup: procura presets galar_<id> e distribui os encontrados no terreno.
+- /galar admin clearsetup: tenta remover somente NPCs criados pelo comando do GalarRank.
+- Se os presets nao existirem, nenhum NPC sera criado. Nada e inventado nem vira aldeao.
+- Comando de importacao usado: /easy_npc preset import_new world galar_milo <x> <y> <z>
+- Como os comandos do Easy NPC mudam entre versoes, a importacao precisa ser testada.
 
-COMANDOS
-/galar rank
-/galar trainers
-/galar battle teste
-/galar battle cadete
-/galar admin bind milo     (olhe para a entidade desejada)
-/galar admin unbind        (olhe para a entidade desejada)
-/galar admin setrank <jogador> <numero>
-/galar admin reset <jogador>
-/galar admin win <jogador> <id>
+CORRECAO DE BATALHAS
+- O codigo de montagem do time e de inicio de batalha foi mantido da v0.1.4.
+- O problema antigo de treinador entrar sem Pokemon ainda precisa de teste real no jogo.
+- Se ocorrer, envie latest.log e o .jar desta compilacao.
 
-TESTE NO JOGO (NAO VALIDADO AINDA)
-1. No mundo, /galar rank deve mostrar 10000, classe Normal.
-2. /galar battle teste contra Wooloo. Apos vencer, rank continua 10000.
-3. Interaja com um NPC marcado /galar admin bind cadete (clique direito).
-4. Vencendo cadete, rank deve ser 7200.
-5. Venca marcos, heitor, bruna, valentina. Rank deve ser 100 (Ultra).
-6. Venca os oito lideres, rank deve ser 4 (Master).
-7. Venca Leon, rank deve ser 1.
-8. Reinicie o servidor/mundo e confira a persistencia.
-
-LIMITACOES
-- Interface Rotom Phone ainda e TEXTO no chat; nao ha item/GUI propio.
-- A tag de NPC tem que ser aplicada pelo administrador uma vez.
-- Alguns NPCs de terceiros podem ter cliente/GUI que precisa de compatibilidade
-  adicional. Batalhas e cliques devem ser testados no cliente e no servidor.
-- Ranking e um numero por jogador, nao e leaderboard competitivo real.
-- NAO use esta 0.1.3 em mundo importante sem backup e testes.
+INSTALACAO
+- Suba todos os arquivos para o repositorio respeitando src/main/java e src/main/resources.
+- Execute o workflow .github/workflows/main.yml em Actions.
+- Baixe o artefato galarrank-jar e instale no perfil MC 1.21.1/NeoForge/Cobblemon 1.8.2.
+- Easy NPC e opcional para a parte Rotom, mas necessario para NPCs editaveis por preset.
+- Nao mantenha .jars de duas versoes de GalarRank na pasta mods.

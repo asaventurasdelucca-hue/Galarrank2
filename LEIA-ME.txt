@@ -1,56 +1,62 @@
-GALAR RANK (mod) v0.1.2 - projeto para compilar no GitHub
+GALAR RANK 0.1.3 - FONTES, NAO JAR COMPILADO
 
-O QUE ESTA PRONTO (versao 0.1.0 - so o essencial, para validar o caminho)
-  /galar rank                       mostra seu rank, classe e insignias
-  /galar trainers                   lista treinadores (e a classe exigida)
-  /galar battle <treinador>         inicia uma batalha de verdade (batalha por turnos do Cobblemon) contra o treinador
-  /galar admin setrank <jogador> <rank>
-  /galar admin reset <jogador>
-  /galar admin win <jogador> <treinador>   simula uma vitoria (testa o rank sem lutar)
-Regras: rank comeca em 10000 (menor = melhor). Top 100 = classe Ultra (libera lideres). Top 8 = Master (libera Leon).
-Cada treinador pontua UMA vez por jogador. O ranking e salvo por jogador em <mundo>/galarrank.json.
-Nao precisa de NPC para batalhar: o time do treinador e criado pelo mod (nao usa o NPC do Cobblemon).
+Minecraft 1.21.1 / NeoForge 21.1.259 / Cobblemon NeoForge 1.8.2 / Java 21.
+Necessario: Kotlin for Forge, requerido pelo Cobblemon.
 
-COMO COMPILAR (sem instalar nada)
- 1. No GitHub: botao "+" > New repository > nome: galarrank > Create repository.
- 2. Na pagina do repositorio: "uploading an existing file". Arraste TODO o conteudo desta pasta
-    (inclusive a pasta .github e a pasta src). Depois "Commit changes".
-    Se a pasta .github nao subir, crie o arquivo: Add file > Create new file, nome  .github/workflows/build.yml
-    e cole o conteudo do build.yml.
- 3. Aba "Actions": o job "build" roda sozinho (1 a 3 minutos). Se ficar verde, abra a execucao e baixe
-    o artefato "galarrank-jar" (la dentro esta o galarrank-0.1.0.jar). Se ficar vermelho, abra o job,
-    copie o log (as linhas em vermelho) e mande para o Claude.
- 4. Coloque o jar na pasta mods (servidor e clientes) e abra o mundo.
+ESTADO REAL
+- O jar 0.1.2 tem classes e metadata, mas ainda precisa ser testado no jogo.
+- Esta 0.1.3 e uma revisao do CODIGO; nao foi compilada nem testada em jogo neste ambiente.
+- O workflow verifica classes reais, compila com Gradle e guarda build.log.
 
-TESTE (5 minutos)
-  /galar battle teste        deve abrir uma batalha contra "Treinador Teste" (1 Wooloo)
-  Vencer -> aparece "[Rotom Phone] Vitoria contra Treinador Teste! ..." e /galar rank muda.
-  Se /galar nao existir, o mod nao carregou: mande o logs/latest.log.
+COMO SUBIR NO GITHUB
+- Envie a estrutura COMPLETA do projeto, incluindo src/, build.gradle,
+  settings.gradle, gradle.properties e .github/workflows/main.yml.
+- Remova workflows antigos .github/workflows/build.yml (se houver), para
+  evitar duas builds desnecessarias.
+- Na aba Actions do GitHub, execute Build GalarRank.
+- Se verde: baixe galarrank-jar, EXTRAIA o ZIP e use o .jar dentro de mods/.
+- Se vermelho: baixe build-log, envie o arquivo build.log para diagnostico.
 
-USO COM EASY NPC (botao que luta)
-  No Easy NPC, crie um dialogo com um botao cuja acao e executar o comando:  /galar battle milo
-  (veja o nome do treinador com /galar trainers)
+O QUE MUDOU
+1. Progressao normal agora e possivel com os cinco treinadores de rota:
+   cadete +2800; marcos +2200; heitor +2000; bruna +1700;
+   valentina +1200. Comecando em rank 10000, chega a 100 (Ultra).
+   O treinador 'teste' nao da pontos no ranking.
+2. Oito lideres (+12 cada) elevam rank 100 para 4 (Master).
+3. Clique direito usa EntityInteractSpecific (mais cedo que EntityInteract).
+4. /galar admin bind olha para o NPC (cone de mira e alcance 5 blocos)
+   em vez de selecionar automaticamente o ser vivo mais proximo.
+5. So pontua vitorias de batalhas iniciadas pelo GalarRank, rastreando
+   UUID unico do treinador. Batalha contra outro treinador com mesmo nome
+   nao deve conceder rank.
+6. Salvamento de galarrank.json por arquivo temporario, seguido de rename.
+7. Workflow com verificacao do JAR e log.
 
-PROXIMOS PASSOS (depois que o 0.1.0 compilar e a batalha funcionar)
-  - Limite de nivel por classe (integrar com o seu mod de level cap)
-  - Drone do Rotom como entidade propria (sem poder ser batalhado)
-  - Treinadores em arquivo de configuracao (sem recompilar)
+COMANDOS
+/galar rank
+/galar trainers
+/galar battle teste
+/galar battle cadete
+/galar admin bind milo     (olhe para a entidade desejada)
+/galar admin unbind        (olhe para a entidade desejada)
+/galar admin setrank <jogador> <numero>
+/galar admin reset <jogador>
+/galar admin win <jogador> <id>
 
+TESTE NO JOGO (NAO VALIDADO AINDA)
+1. No mundo, /galar rank deve mostrar 10000, classe Normal.
+2. /galar battle teste contra Wooloo. Apos vencer, rank continua 10000.
+3. Interaja com um NPC marcado /galar admin bind cadete (clique direito).
+4. Vencendo cadete, rank deve ser 7200.
+5. Venca marcos, heitor, bruna, valentina. Rank deve ser 100 (Ultra).
+6. Venca os oito lideres, rank deve ser 4 (Master).
+7. Venca Leon, rank deve ser 1.
+8. Reinicie o servidor/mundo e confira a persistencia.
 
-IMPORTANTE (v0.1.2)
- - O jar que saiu antes tinha SO um arquivo de metadados chamado "neoforged.mods.toml" (nome errado) e nenhuma classe:
-   por isso o Minecraft recusava. O nome certo e neoforge.mods.toml e o jar precisa conter as classes (dev/galar/rank/*.class).
- - Agora o build FALHA de proposito se o jar sair sem o toml ou sem a classe GalarRank.class (passo "Conferir que o jar tem o mod de verdade").
- - No repositorio: APAGUE tudo que o Gemini mexeu (principalmente .github/workflows/build.yml e qualquer arquivo que gere o jar na mao)
-   e suba estes arquivos no lugar. Nao crie o jar manualmente: ele tem que sair do "gradle build".
- - Se o build ficar vermelho, baixe o artefato "build-log" (aba Actions > a execucao > Artifacts) e mande o build.log.
-
-
-CLIQUE DIREITO (novo na v0.1.2)
-  1. Spawne qualquer NPC (Easy NPC, NPC do Cobblemon, villager...) e fique a ate 5 blocos dele.
-  2. /galar admin bind milo       -> marca o NPC como o lider Milo (use /galar trainers para ver os nomes)
-  3. Clique direito no NPC com a mao principal: a batalha comeca. Sem comando, sem botao.
-  /galar admin unbind             -> remove a marca do NPC mais proximo.
-  Obs: o clique direito do mod toma o lugar do dialogo/GUI do NPC (o clique nao chega nele). Se quiser dialogo
-  antes, use o Easy NPC com um botao que execute  /galar battle milo.
-  A marca e uma tag normal do Minecraft (galar_trainer_milo); tambem funciona com /tag @e[...] add galar_trainer_milo.
+LIMITACOES
+- Interface Rotom Phone ainda e TEXTO no chat; nao ha item/GUI propio.
+- A tag de NPC tem que ser aplicada pelo administrador uma vez.
+- Alguns NPCs de terceiros podem ter cliente/GUI que precisa de compatibilidade
+  adicional. Batalhas e cliques devem ser testados no cliente e no servidor.
+- Ranking e um numero por jogador, nao e leaderboard competitivo real.
+- NAO use esta 0.1.3 em mundo importante sem backup e testes.

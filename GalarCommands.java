@@ -13,6 +13,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.phys.Vec3;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -99,11 +101,28 @@ public final class GalarCommands {
         return 1;
     }
 
-    /** Marca a entidade viva mais proxima (ate 5 blocos) como o treinador: clique direito nela inicia a batalha. */
+    /**
+     * Escolhe a entidade viva para a qual o admin esta olhando, num alcance de
+     * ate cinco blocos. Isso evita marcar sem querer um Pokemon ao lado.
+     */
     private static Entity nearestNpc(ServerPlayer p) {
+        Vec3 eye = p.getEyePosition();
+        Vec3 view = p.getLookAngle();
         List<Entity> list = p.level().getEntities(p, p.getBoundingBox().inflate(5.0),
-                e -> e instanceof LivingEntity && !(e instanceof Player));
-        return list.stream().min(Comparator.comparingDouble(e -> e.distanceToSqr(p))).orElse(null);
+                e -> e instanceof LivingEntity && !(e instanceof Player) && e.isAlive());
+        return list.stream().filter(e -> {
+            Vec3 toward = e.getBoundingBox().getCenter().subtract(eye);
+            double distance = toward.length();
+            return distance > 0.0 && distance <= 5.0
+                    && view.dot(toward.scale(1.0 / distance)) > 0.97
+                    && p.hasLineOfSight(e);
+        }).min(Comparator.comparingDouble(e -> e.distanceToSqr(p))).orElse(null);
+    }
+
+    private static void clearTrainerTags(Entity target) {
+        for (String tag : new ArrayList<>(target.getTags())) {
+            if (tag.startsWith(InteractHooks.TAG_PREFIX)) target.removeTag(tag);
+        }
     }
 
     private static int bind(CommandSourceStack src, String id) throws CommandSyntaxException {
@@ -114,10 +133,10 @@ public final class GalarCommands {
         }
         Entity target = nearestNpc(p);
         if (target == null) {
-            src.sendFailure(Component.literal("Nenhum NPC por perto (fique a ate 5 blocos dele)."));
+            src.sendFailure(Component.literal("Olhe para o NPC a ate 5 blocos e tente novamente."));
             return 0;
         }
-        target.getTags().removeIf(tag -> tag.startsWith(InteractHooks.TAG_PREFIX));
+        clearTrainerTags(target);
         target.addTag(InteractHooks.TAG_PREFIX + id);
         src.sendSuccess(() -> Component.literal("NPC marcado como " + id + ". Clique direito nele para batalhar."), true);
         return 1;
@@ -127,10 +146,10 @@ public final class GalarCommands {
         ServerPlayer p = src.getPlayerOrException();
         Entity target = nearestNpc(p);
         if (target == null) {
-            src.sendFailure(Component.literal("Nenhum NPC por perto."));
+            src.sendFailure(Component.literal("Olhe para o NPC a ate 5 blocos e tente novamente."));
             return 0;
         }
-        target.getTags().removeIf(tag -> tag.startsWith(InteractHooks.TAG_PREFIX));
+        clearTrainerTags(target);
         src.sendSuccess(() -> Component.literal("Marca de treinador removida."), true);
         return 1;
     }

@@ -37,7 +37,8 @@ public final class TrainerBattles {
             npcTeam.add(BattlePokemon.Companion.safeCopyOf(pokemon));
         }
         PlayerBattleActor playerActor = new PlayerBattleActor(player.getUUID(), playerTeam);
-        TrainerBattleActor trainerActor = new TrainerBattleActor(t.name(), UUID.randomUUID(), npcTeam, new StrongBattleAI(t.skill()));
+        UUID actorId = UUID.randomUUID();
+        TrainerBattleActor trainerActor = new TrainerBattleActor(t.name(), actorId, npcTeam, new StrongBattleAI(t.skill()));
         BattleStartResult result = BattleRegistry.startBattle(
                 BattleFormat.Companion.getGEN_9_SINGLES(),
                 new BattleSide(playerActor),
@@ -46,6 +47,7 @@ public final class TrainerBattles {
         if (result instanceof ErroredBattleStart) {
             return "Nao foi possivel iniciar a batalha (voce ja esta em uma?).";
         }
+        BattleHooks.track(actorId, player.getUUID(), t.id());
         return null;
     }
 }

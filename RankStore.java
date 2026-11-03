@@ -9,6 +9,9 @@ import net.minecraft.world.level.storage.LevelResource;
 import java.io.Reader;
 import java.io.Writer;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -49,8 +52,16 @@ public final class RankStore {
 
     public static void save() {
         if (file == null) return;
-        try (Writer writer = Files.newBufferedWriter(file)) {
-            GSON.toJson(data, writer);
+        try {
+            Path temp = file.resolveSibling(file.getFileName().toString() + ".tmp");
+            try (Writer writer = Files.newBufferedWriter(temp, StandardCharsets.UTF_8)) {
+                GSON.toJson(data, writer);
+            }
+            try {
+                Files.move(temp, file, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(temp, file, StandardCopyOption.REPLACE_EXISTING);
+            }
         } catch (Exception e) {
             GalarRank.LOGGER.error("[GalarRank] erro ao salvar galarrank.json", e);
         }

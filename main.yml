@@ -1,0 +1,101 @@
+name: Build GalarRank
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Conferir fontes e preparar repositorios antigos
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -f src/main/java/dev/galar/rank/GalarRank.java ]]; then
+            mkdir -p src/main/java/dev/galar/rank
+            shopt -s nullglob
+            files=(./*.java)
+            ((${#files[@]} > 0)) || { echo "ERRO: arquivos Java ausentes"; exit 1; }
+            cp "${files[@]}" src/main/java/dev/galar/rank/
+          fi
+          if [[ ! -f src/main/resources/META-INF/neoforge.mods.toml ]]; then
+            mkdir -p src/main/resources/META-INF
+            test -f neoforge.mods.toml || { echo "ERRO: neoforge.mods.toml ausente"; exit 1; }
+            cp neoforge.mods.toml src/main/resources/META-INF/neoforge.mods.toml
+          fi
+          test -f build.gradle
+          test -f settings.gradle
+          test -f src/main/java/dev/galar/rank/TrainerBattles.java
+
+      - name: Baixar Cobblemon NeoForge 1.8.2 para compilacao
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p libs
+          URL="$(curl --fail --silent --show-error --location --retry 3 \
+            -A 'galarrank-build' 'https://api.modrinth.com/v2/project/cobblemon/version' \
+            | jq -er '[.[] | .files[] | select(.filename == "Cobblemon-neoforge-1.8.2+1.21.1.jar")][0].url')"
+          curl --fail --show-error --location --retry 3 -A 'galarrank-build' "$URL" -o libs/cobblemon.jar
+          jar tf libs/cobblemon.jar >/dev/null
+
+      - name: Compilar
+        shell: bash
+        run: |
+          set -o pipefail
+          gradle build --no-daemon --stacktrace 2>&1 | tee build.log
+
+      - name: Testar arquivo gerado
+        shell: bash
+        run: |
+          set -euo pipefail
+          JAR="$(find build/libs -maxdepth 1 -type f -name 'galarrank-*.jar' ! -name '*sources*' ! -name '*javadoc*' -print -quit)"
+          test -n "$JAR"
+          jar tf "$JAR" > jar-contents.txt
+          for name in \
+            'META-INF/neoforge.mods.toml' \
+            'dev/galar/rank/GalarRank.class' \
+            'dev/galar/rank/InteractHooks.class' \
+            'dev/galar/rank/BattleHooks.class' \
+            'dev/galar/rank/TrainerBattles.class' \
+            'dev/galar/rank/RankLogic.class'; do
+            grep -Fxq "$name" jar-contents.txt || { echo "Falta no jar: $name"; exit 1; }
+          done
+          echo "JAR REAL: $JAR"
+          ls -lh "$JAR"
+
+      - name: Guardar build.log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-log
+          path: build.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Guardar jar de verdade
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galarrank-jar
+          path: build/libs/galarrank-*.jar
+          if-no-files-found: error
+          retention-days: 14

@@ -5,7 +5,9 @@ import net.minecraft.server.level.ServerPlayer;
 
 public final class RankLogic {
     /** posicoes ganhas por tier de treinador de rota (tier 1..5) */
-    public static final int[] TIER_GAIN = {700, 450, 280, 170, 100};
+    // Cinco treinadores de rota somam 9900 posicoes: 10000 -> 100 (Ultra).
+    // O treinador "teste" nao distribui pontos do campeonato.
+    public static final int[] TIER_GAIN = {2800, 2200, 2000, 1700, 1200};
     public static final int LEADER_GAIN = 12;
     public static final int ULTRA_RANK = 100;
     public static final int MASTER_RANK = 8;
@@ -30,7 +32,9 @@ public final class RankLogic {
             return;
         }
         int before = classOf(pr.rank);
-        int gain = t.leader() ? LEADER_GAIN : (t.tier() >= 1 && t.tier() <= 5 ? TIER_GAIN[t.tier() - 1] : 0);
+        int gain = "teste".equals(t.id()) ? 0
+                : t.leader() ? LEADER_GAIN
+                : (t.tier() >= 1 && t.tier() <= 5 ? TIER_GAIN[t.tier() - 1] : 0);
         pr.rank = Math.max(1, pr.rank - gain);
         pr.defeated.add(t.id());
         if (t.leader()) pr.badges++;

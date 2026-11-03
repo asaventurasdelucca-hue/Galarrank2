@@ -32,11 +32,13 @@ public class GalarRank {
 
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
+        BattleHooks.clear();
         RankStore.load(event.getServer());
     }
 
     @SubscribeEvent
     public void onServerStopping(ServerStoppingEvent event) {
         RankStore.save();
+        BattleHooks.clear();
     }
 }

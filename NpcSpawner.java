@@ -82,7 +82,7 @@ public final class NpcSpawner {
     }
 
     private static boolean hasNearby(ServerLevel level, BlockPos origin, String id) {
-        return !level.getEntities(null, new AABB(origin).inflate(SEARCH_RADIUS),
+        return !level.getEntitiesOfClass(Entity.class, new AABB(origin).inflate(SEARCH_RADIUS),
                 e -> e.getTags().contains(InteractHooks.TAG_PREFIX + id)).isEmpty();
     }
 
@@ -126,7 +126,3 @@ public final class NpcSpawner {
                             && level.getBlockState(at.above()).isAir()) return at;
                 }
             }
-        }
-        return null;
-    }
-}

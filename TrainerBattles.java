@@ -104,7 +104,7 @@ public final class TrainerBattles {
                     BattleFormat.Companion.getGEN_9_SINGLES(),
                     new BattleSide(playerActor),
                     new BattleSide(trainerActor),
-                    false);
+                    true); // Allow the Cobblemon pre/post battle events used by other addons.
         } catch (Exception ex) {
             GalarRank.LOGGER.error("[GalarRank] Falha ao iniciar batalha com {}", trainer.id(), ex);
             GalarLoot.unmark(enemyTeam);

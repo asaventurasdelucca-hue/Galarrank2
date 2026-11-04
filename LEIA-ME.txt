@@ -1,63 +1,35 @@
-GalarRank 0.1.6 - tentativa de corrigir os Pokemon invisiveis na batalha.
+GALARRANK v0.1.7 — NeoForge 1.21.1 / Cobblemon 1.8.3
 
-Mudanca principal: TrainerBattleActor foi substituido por GalarTrainerBattleActor,
-que implementa EntityBackedBattleActor para disponibilizar uma posicao fisica
-para o envio dos Pokemon do treinador.
+PROJETO-FONTE, nao e o jar. Compile pelo Github Actions e baixe galarrank-jar.
 
-Compilacao para Cobblemon NeoForge 1.8.3 e Minecraft 1.21.1.
-Nao atualize o modpack para 1.8.4 ate testar esta versao.
+CORRECOES:
+- NPCs de GalarRank nao dao drops de Pokemon derrotados (Cobblemon LOOT_DROPPED e NeoForge LivingDropsEvent).
+- Os Pokemon selvagens continuam dropando normalmente.
+- Rotom Drone nao e mais um Rotom Pokemon: e um pequeno drone voxel com corpo vermelho, tela e helice lateral.
+- K invoca o drone fisico, abre o painel; K de novo recolhe. Clique no drone reabre o painel.
+- Radar/pontos/rank em GUI. Alertas curtos na action bar, sem poluir o chat.
+- Remocao segura de NPC: /galar admin unbind = remove vinculo e preserva skin.
+  /galar admin delete confirm = exclui o Easy NPC vinculado sob a mira ate 5 blocos.
 
-Testes apos compilar:
-1. Faca backup do mundo.
-2. Substitua apenas o JAR antigo do GalarRank pelo novo.
-3. Execute /galar battle teste e veja se Wooloo nivel 5 aparece no campo.
-4. Use um NPC Easy NPC existente vinculado por /galar admin bind teste.
-5. Se a batalha abrir sem adversario, envie o novo latest.log e print da tela.
+COMO ORGANIZAR OS NPCS:
+1) Tenha Easy NPC instalado (o modulo Core + Config UI do seu pack).
+2) Crie manualmente NPC usando a ferramenta / editor do Easy NPC e escolha a skin.
+3) Deixe o NPC em lugar seguro e parado. Fique ate 5 blocos e mire diretamente nele.
+4) Execute /galar admin bind cadete (ou marcos, heitor, bruna, valentina, milo, nessa, kabu, bea, opal, melony, piers, raihan, leon, teste).
+5) Clique direito para batalhar. Depois pressione K para achar treinadores perto.
+6) Para alterar o treinador: mire e /galar admin bind <outro_id>.
+7) Para manter o NPC, mas tirar batalha: /galar admin unbind.
+8) Para excluir o NPC de verdade: /galar admin delete confirm, mirando nele. Nao tem desfazer.
+9) /galar admin spawn <id> e /galar admin setup necessitam presets Easy NPC WORLD galar_<id>; NPCs manuais com bind NAO precisam de presets.
 
-IMPORTANTE: Esta versao ainda NAO foi testada rodando no Minecraft.
+TESTES:
+- Crie backup do mundo antes de testar.
+- /galar battle teste: Wooloo nv5, sem drops depois de derrotar.
+- /galar admin bind cadete e clique no NPC: 2 Pokemon, sem drops.
+- /galar rank: confirma pontos.
+- K: drone fisico e GUI.
 
-GalarRank v0.1.5 (fonte experimental) - Minecraft 1.21.1 / NeoForge / Cobblemon 1.8.2
-
-IMPORTANTE: esta versao NAO foi compilada/testada dentro do Minecraft.
-Faca backup do seu mundo antes de usar; compare o build.log se houver erros.
-
-NOVO ROTOM DRONE FISICO
-- Tecla K: invoca um ROTOM real usando PokemonEntity + modelo 3D do Cobblemon.
-- O Rotom fica flutuando e segue voce. Aperte K novamente para recolher.
-- Clique direito no Rotom: mostra rank, pontos, insignias e treinadores proximos no chat.
-- Comandos: /galar rotom (chamar/recolher), /galar rotom info (consultar)
-- LIMITACAO: ainda e um PokemonEntity do Cobblemon, nao uma entidade 100% blindada contra
-  captura e outras mecanicas de Pokemon. Evite usa-lo em servidores competitivos por enquanto.
-- O modelo de Rotom e o original do Cobblemon; nao copia as texturas para este projeto.
-
-NOVO SISTEMA DE NPCS COM SKIN
-- Removeu geracao de aldeoes pelo GalarRank.
-- COMPATIVEL COM EASY NPC: crie o NPC pelo Easy NPC, configure a skin e nome.
-- Mire no NPC ate 5 blocos e digite /galar admin bind milo (troque pelo ID desejado).
-- O jogador desafia com clique direito; o time e as regras continuam do GalarRank.
-- Pode criar um botao no dialogo Easy NPC que execute /galar battle milo caso a API
-  de clique de um NPC especifico intercepte a interacao antes do GalarRank.
-
-IMPORTACAO AUTOMATICA COM PRESETS EASY NPC (OPCIONAL)
-- Instale a versao NeoForge 1.21.1 do Easy NPC com seus modulos necessarios.
-- Monte um NPC da maneira desejada, usando sua skin personalizada.
-- Exporte no Easy NPC como PRESET DO MUNDO com nome exato galar_milo,
-  galar_nessa, etc., conforme /galar trainers (galar_teste para testes).
-- /galar admin spawn milo: importa preset galar_milo e o vincula.
-- /galar admin setup: procura presets galar_<id> e distribui os encontrados no terreno.
-- /galar admin clearsetup: tenta remover somente NPCs criados pelo comando do GalarRank.
-- Se os presets nao existirem, nenhum NPC sera criado. Nada e inventado nem vira aldeao.
-- Comando de importacao usado: /easy_npc preset import_new world galar_milo <x> <y> <z>
-- Como os comandos do Easy NPC mudam entre versoes, a importacao precisa ser testada.
-
-CORRECAO DE BATALHAS
-- O codigo de montagem do time e de inicio de batalha foi mantido da v0.1.4.
-- O problema antigo de treinador entrar sem Pokemon ainda precisa de teste real no jogo.
-- Se ocorrer, envie latest.log e o .jar desta compilacao.
-
-INSTALACAO
-- Suba todos os arquivos para o repositorio respeitando src/main/java e src/main/resources.
-- Execute o workflow .github/workflows/main.yml em Actions.
-- Baixe o artefato galarrank-jar e instale no perfil MC 1.21.1/NeoForge/Cobblemon 1.8.2.
-- Easy NPC e opcional para a parte Rotom, mas necessario para NPCs editaveis por preset.
-- Nao mantenha .jars de duas versoes de GalarRank na pasta mods.
+LIMITACOES:
+- Render do drone e um prototipo voxel de BlockDisplay; nao e a forma 3D oficial do anime.
+- O sistema foi editado em codigo-fonte; requer compilacao e teste in-game.
+- Se algum addon gerar drops por outro evento customizado, pode exigir uma integracao adicional.

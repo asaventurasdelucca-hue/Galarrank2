@@ -59,8 +59,8 @@ public final class InteractHooks {
             if (previous != null && now - previous < CLICK_COOLDOWN_MS) return;
 
             String error = TrainerBattles.start(player, trainer, target);
-            if (error != null) player.sendSystemMessage(Component.literal("[Rotom Phone] " + error));
-            else player.sendSystemMessage(Component.literal("§6[Rotom Drone] §fDesafiando " + trainer.name() + "!"));
+            if (error != null) player.displayClientMessage(Component.literal("§c" + error), true);
+            else player.displayClientMessage(Component.literal("§6Desafiando " + trainer.name() + "!"), true);
             return;
         }
     }

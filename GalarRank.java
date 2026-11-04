@@ -21,8 +21,11 @@ public class GalarRank {
         NeoForge.EVENT_BUS.register(this);
         NeoForge.EVENT_BUS.register(new InteractHooks());
         NeoForge.EVENT_BUS.register(new RotomCompanion());
+        NeoForge.EVENT_BUS.register(new GalarLoot());
+        modBus.addListener(RotomNetwork::register);
         // vitoria em batalha do Cobblemon -> pontos de ranking
         CobblemonEvents.BATTLE_VICTORY.subscribe(Priority.NORMAL, BattleHooks::onVictory);
+        CobblemonEvents.LOOT_DROPPED.subscribe(Priority.NORMAL, GalarLoot::cobblemonLoot);
         LOGGER.info("[GalarRank] carregado");
     }
 
@@ -34,6 +37,7 @@ public class GalarRank {
     @SubscribeEvent
     public void onServerStarted(ServerStartedEvent event) {
         BattleHooks.clear();
+        GalarLoot.clear();
         RotomCompanion.clear(event.getServer());
         RankStore.load(event.getServer());
     }
@@ -43,5 +47,6 @@ public class GalarRank {
         RankStore.save();
         RotomCompanion.clear(event.getServer());
         BattleHooks.clear();
+        GalarLoot.clear();
     }
 }

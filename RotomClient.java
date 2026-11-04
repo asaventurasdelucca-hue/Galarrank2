@@ -18,6 +18,12 @@ public final class RotomClient {
 
     private RotomClient() {}
 
+    /** Invoked for a properly registered clientbound payload. */
+    public static void openReport(String report) {
+        Minecraft minecraft = Minecraft.getInstance();
+        if (minecraft.player != null) minecraft.setScreen(new RotomScreen(report));
+    }
+
     @EventBusSubscriber(modid = GalarRank.MOD_ID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
     public static final class Registration {
         @SubscribeEvent

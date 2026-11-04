@@ -98,6 +98,7 @@ public final class TrainerBattles {
         GalarRank.LOGGER.info("[GalarRank] Adversario {} ancorado em {}, Pokemon={}",
                 trainer.id(), opponentPos, trainerActor.getPokemonList().size());
         BattleStartResult result;
+        GalarLoot.mark(enemyTeam);
         try {
             result = BattleRegistry.startBattle(
                     BattleFormat.Companion.getGEN_9_SINGLES(),
@@ -106,10 +107,12 @@ public final class TrainerBattles {
                     false);
         } catch (Exception ex) {
             GalarRank.LOGGER.error("[GalarRank] Falha ao iniciar batalha com {}", trainer.id(), ex);
+            GalarLoot.unmark(enemyTeam);
             return "Erro ao iniciar batalha. Veja latest.log.";
         }
         if (!(result instanceof SuccessfulBattleStart)) {
             GalarRank.LOGGER.warn("[GalarRank] BattleRegistry nao iniciou batalha com {}: {}", trainer.id(), result);
+            GalarLoot.unmark(enemyTeam);
             return "Batalha rejeitada pelo Cobblemon. Verifique latest.log.";
         }
         BattleHooks.track(actorId, player.getUUID(), trainer.id());

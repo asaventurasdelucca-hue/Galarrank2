@@ -28,7 +28,7 @@ public final class RankLogic {
     public static void onWin(ServerPlayer player, Trainers.Trainer t) {
         RankStore.PlayerRank pr = RankStore.get(player.getUUID());
         if (pr.defeated.contains(t.id())) {
-            player.sendSystemMessage(Component.literal("[Rotom Phone] Voce ja pontuou contra " + t.name() + "."));
+            player.displayClientMessage(Component.literal("§eVoce ja pontuou contra " + t.name() + "."), true);
             return;
         }
         int before = classOf(pr.rank);
@@ -46,11 +46,11 @@ public final class RankLogic {
         int after = classOf(pr.rank);
         RankStore.save();
 
-        player.sendSystemMessage(Component.literal("[Rotom Phone] Vitoria contra " + t.name() + "! Rank: " + pr.rank
-                + (gain > 0 ? " (subiu " + gain + " posicoes)" : "")));
-        if (t.leader()) player.sendSystemMessage(Component.literal("Insignias: " + pr.badges + "/8"));
+        player.displayClientMessage(Component.literal("§6Vitoria contra " + t.name() + "! Rank: " + pr.rank
+                + (gain > 0 ? " (subiu " + gain + " posicoes)" : "")), true);
+        // Insignias can be read in the Rotom screen (K).
         if (after > before) {
-            player.sendSystemMessage(Component.literal("[Rotom Phone] Sua classe subiu para " + className(after) + "!"));
+            player.displayClientMessage(Component.literal("§aSua classe subiu para " + className(after) + "!"), true);
         }
         if (t.champion() && player.getServer() != null) {
             player.getServer().getPlayerList().broadcastSystemMessage(

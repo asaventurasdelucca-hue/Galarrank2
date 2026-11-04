@@ -54,6 +54,8 @@ public final class GalarCommands {
                 .then(Commands.literal("setup").executes(ctx -> setup(ctx.getSource())))
                 .then(Commands.literal("clearsetup").executes(ctx -> clearSetup(ctx.getSource())))
                 .then(Commands.literal("unbind").executes(ctx -> unbind(ctx.getSource())))
+                .then(Commands.literal("delete")
+                    .then(Commands.literal("confirm").executes(ctx -> deleteBoundNpc(ctx.getSource()))))
                 .then(Commands.literal("win")
                     .then(Commands.argument("player", EntityArgument.player())
                         .then(Commands.argument("trainer", StringArgumentType.word())
@@ -202,6 +204,29 @@ public final class GalarCommands {
         clearTrainerTags(target);
         src.sendSuccess(() -> Component.literal("Marca de treinador removida."), true);
         return 1;
+    }
+
+    /** Deletes only a bound Easy NPC the admin is directly facing; never runs on an unrelated entity. */
+    private static int deleteBoundNpc(CommandSourceStack src) throws CommandSyntaxException {
+        ServerPlayer player = src.getPlayerOrException();
+        Entity target = nearestNpc(player);
+        if (target == null || target.getTags().stream().noneMatch(t -> t.startsWith(InteractHooks.TAG_PREFIX))) {
+            src.sendFailure(Component.literal("Olhe para um NPC vinculado ao GalarRank a ate 5 blocos."));
+            return 0;
+        }
+        String namespace = net.minecraft.core.registries.BuiltInRegistries.ENTITY_TYPE.getKey(target.getType()).getNamespace();
+        if (!"easy_npc".equals(namespace)) {
+            src.sendFailure(Component.literal("Somente NPCs do Easy NPC podem ser excluidos por este comando."));
+            return 0;
+        }
+        int result = player.getServer().getCommands().performPrefixedCommand(
+                player.createCommandSourceStack().withPermission(4), "easy_npc delete " + target.getUUID());
+        if (result > 0) {
+            src.sendSuccess(() -> Component.literal("Easy NPC excluido pelo sistema do proprio mod."), true);
+            return 1;
+        }
+        src.sendFailure(Component.literal("Easy NPC nao confirmou a exclusao. Use o menu de configuracao do NPC."));
+        return 0;
     }
 
     private static int fakeWin(CommandSourceStack src, ServerPlayer target, String id) {

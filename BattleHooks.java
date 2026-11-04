@@ -2,7 +2,6 @@ package dev.galar.rank;
 
 import com.cobblemon.mod.common.api.events.battles.BattleVictoryEvent;
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor;
-import com.cobblemon.mod.common.battles.actor.TrainerBattleActor;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
@@ -38,13 +37,13 @@ public final class BattleHooks {
     private static void handleVictory(MinecraftServer server, BattleVictoryEvent event) {
         // Remove qualquer batalha rastreada na qual o treinador venceu.
         for (Object winner : event.getWinners()) {
-            if (winner instanceof TrainerBattleActor trainerActor) {
+            if (winner instanceof GalarTrainerBattleActor trainerActor) {
                 PENDING.remove(trainerActor.getUuid());
             }
         }
 
         for (Object loser : event.getLosers()) {
-            if (!(loser instanceof TrainerBattleActor trainerActor)) continue;
+            if (!(loser instanceof GalarTrainerBattleActor trainerActor)) continue;
             PendingFight pending = PENDING.remove(trainerActor.getUuid());
             if (pending == null) continue;
             for (Object winner : event.getWinners()) {

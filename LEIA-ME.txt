@@ -1,3 +1,21 @@
+GalarRank 0.1.6 - tentativa de corrigir os Pokemon invisiveis na batalha.
+
+Mudanca principal: TrainerBattleActor foi substituido por GalarTrainerBattleActor,
+que implementa EntityBackedBattleActor para disponibilizar uma posicao fisica
+para o envio dos Pokemon do treinador.
+
+Compilacao para Cobblemon NeoForge 1.8.3 e Minecraft 1.21.1.
+Nao atualize o modpack para 1.8.4 ate testar esta versao.
+
+Testes apos compilar:
+1. Faca backup do mundo.
+2. Substitua apenas o JAR antigo do GalarRank pelo novo.
+3. Execute /galar battle teste e veja se Wooloo nivel 5 aparece no campo.
+4. Use um NPC Easy NPC existente vinculado por /galar admin bind teste.
+5. Se a batalha abrir sem adversario, envie o novo latest.log e print da tela.
+
+IMPORTANTE: Esta versao ainda NAO foi testada rodando no Minecraft.
+
 GalarRank v0.1.5 (fonte experimental) - Minecraft 1.21.1 / NeoForge / Cobblemon 1.8.2
 
 IMPORTANTE: esta versao NAO foi compilada/testada dentro do Minecraft.

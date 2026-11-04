@@ -4,7 +4,7 @@ license = "MIT"
 
 [[mods]]
 modId = "galarrank"
-version = "0.1.5"
+version = "0.1.6"
 displayName = "Galar Rank"
 description = '''Ranking de treinadores estilo Campeonato da Coroacao para Cobblemon.'''
 

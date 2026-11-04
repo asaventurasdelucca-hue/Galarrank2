@@ -8,11 +8,13 @@ import com.cobblemon.mod.common.battles.BattleSide;
 import com.cobblemon.mod.common.battles.BattleStartResult;
 import com.cobblemon.mod.common.battles.SuccessfulBattleStart;
 import com.cobblemon.mod.common.battles.actor.PlayerBattleActor;
-import com.cobblemon.mod.common.battles.actor.TrainerBattleActor;
 import com.cobblemon.mod.common.battles.ai.StrongBattleAI;
 import com.cobblemon.mod.common.battles.pokemon.BattlePokemon;
 import com.cobblemon.mod.common.pokemon.Pokemon;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.phys.Vec3;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,11 +25,11 @@ public final class TrainerBattles {
 
     /** Returns null when the battle starts; provides useful diagnostics otherwise. */
     public static String start(ServerPlayer player, Trainers.Trainer trainer) {
-        return start(player, trainer, UUID.randomUUID());
+        return start(player, trainer, (Entity) null);
     }
 
-    /** Clicking a physical NPC uses its real entity UUID as the trainer actor ID. */
-    public static String start(ServerPlayer player, Trainers.Trainer trainer, UUID npcEntityId) {
+    /** Uses the physical NPC for battle positioning, or a point in front of the player for /galar battle. */
+    public static String start(ServerPlayer player, Trainers.Trainer trainer, Entity npc) {
         RankStore.PlayerRank ranking = RankStore.get(player.getUUID());
         if (RankLogic.classOf(ranking.rank) < trainer.reqClass()) {
             return "Voce precisa da Classe " + RankLogic.className(trainer.reqClass()) + " para desafiar " + trainer.name() + ".";
@@ -71,9 +73,30 @@ public final class TrainerBattles {
         GalarRank.LOGGER.info("[GalarRank] Iniciando PvE {}: jogador={} Pokemon, treinador={} Pokemon [{}]",
                 trainer.id(), playerTeam.size(), enemyTeam.size(), names);
         PlayerBattleActor playerActor = new PlayerBattleActor(player.getUUID(), playerTeam);
-        UUID actorId = npcEntityId;
-        TrainerBattleActor trainerActor = new TrainerBattleActor(
-                trainer.name(), actorId, enemyTeam, new StrongBattleAI(trainer.skill()));
+        // Cobblemon only knows where to send out an AI trainer's Pokemon when the
+        // actor implements EntityBackedBattleActor. TrainerBattleActor does NOT.
+        LivingEntity anchor = npc instanceof LivingEntity living ? living : player;
+        Vec3 opponentPos;
+        if (npc != null) {
+            opponentPos = npc.position();
+        } else {
+            Vec3 look = player.getLookAngle();
+            Vec3 horizontal = new Vec3(look.x, 0, look.z);
+            if (horizontal.lengthSqr() < 0.001) horizontal = new Vec3(0, 0, 1);
+            opponentPos = player.position().add(horizontal.normalize().scale(6));
+        }
+        // Avoid zero-length actor distance if the NPC intersects the player.
+        if (opponentPos.distanceToSqr(player.position()) < 1.0) {
+            Vec3 look = player.getLookAngle();
+            Vec3 horizontal = new Vec3(look.x, 0, look.z);
+            if (horizontal.lengthSqr() < 0.001) horizontal = new Vec3(0, 0, 1);
+            opponentPos = player.position().add(horizontal.normalize().scale(6));
+        }
+        UUID actorId = npc != null ? npc.getUUID() : UUID.randomUUID();
+        GalarTrainerBattleActor trainerActor = new GalarTrainerBattleActor(
+                trainer.name(), actorId, enemyTeam, new StrongBattleAI(trainer.skill()), anchor, opponentPos);
+        GalarRank.LOGGER.info("[GalarRank] Adversario {} ancorado em {}, Pokemon={}",
+                trainer.id(), opponentPos, trainerActor.getPokemonList().size());
         BattleStartResult result;
         try {
             result = BattleRegistry.startBattle(

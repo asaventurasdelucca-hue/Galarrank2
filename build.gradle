@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'dev.galar'
-version = '0.1.5'
+version = '0.1.6'
 base { archivesName = 'galarrank' }
 
 java { toolchain.languageVersion = JavaLanguageVersion.of(21) }
@@ -21,7 +21,7 @@ neoForge {
 }
 
 dependencies {
-    // O jar do Cobblemon e baixado pelo GitHub Actions (veja .github/workflows/build.yml) e so e usado para compilar.
+    // O jar do Cobblemon e baixado pelo GitHub Actions (veja .github/workflows/main.yml) e so e usado para compilar.
     compileOnly files('libs/cobblemon.jar')
     compileOnly 'org.jetbrains.kotlin:kotlin-stdlib:2.0.21'
     compileOnly 'org.jetbrains:annotations:24.1.0'

@@ -46,14 +46,14 @@ jobs:
           test -f settings.gradle
           test -f src/main/java/dev/galar/rank/TrainerBattles.java
 
-      - name: Baixar Cobblemon NeoForge 1.8.2 para compilacao
+      - name: Baixar Cobblemon NeoForge 1.8.3 para compilacao
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p libs
           URL="$(curl --fail --silent --show-error --location --retry 3 \
             -A 'galarrank-build' 'https://api.modrinth.com/v2/project/cobblemon/version' \
-            | jq -er '[.[] | .files[] | select(.filename == "Cobblemon-neoforge-1.8.2+1.21.1.jar")][0].url')"
+            | jq -er '[.[] | .files[] | select(.filename == "Cobblemon-neoforge-1.8.3+1.21.1.jar")][0].url')"
           curl --fail --show-error --location --retry 3 -A 'galarrank-build' "$URL" -o libs/cobblemon.jar
           jar tf libs/cobblemon.jar >/dev/null
 
@@ -75,6 +75,7 @@ jobs:
             'dev/galar/rank/GalarRank.class' \
             'dev/galar/rank/InteractHooks.class' \
             'dev/galar/rank/BattleHooks.class' \
+            'dev/galar/rank/GalarTrainerBattleActor.class' \
             'dev/galar/rank/TrainerBattles.class' \
             'dev/galar/rank/RankLogic.class' \
             'dev/galar/rank/NpcSpawner.class' \
